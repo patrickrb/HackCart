@@ -1,3 +1,6 @@
+![image](https://github.com/patrickrb/HackCart/assets/6586559/204140d1-ba00-4861-aa4f-72bc9f4d135a)
+
+
 SPECIFICATIONS:
 
 ESP32-S3 module with 16MB Flash and 8 MB PSRAM
