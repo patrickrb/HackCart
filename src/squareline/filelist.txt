@@ -1,0 +1,15 @@
+components/ui_comp_image1.c
+components/ui_comp_image2.c
+components/ui_comp.c
+screens/ui_Screen1.c
+ui.c
+components/ui_comp_hook.c
+ui_helpers.c
+images/ui_img_background_png.c
+images/ui_img_middle_circles_png.c
+images/ui_img_right_empty_gauge_png.c
+images/ui_img_right_full_gauge_png.c
+images/ui_img_speed_gauge_png.c
+images/ui_img_left_empty_gauge_png.c
+images/ui_img_left_full_gauge_png.c
+images/ui_img_1926738670.c
