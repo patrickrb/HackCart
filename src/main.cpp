@@ -42,7 +42,7 @@ public:
     {
       auto cfg = _bus_instance.config();
       cfg.port = 0;
-      cfg.freq_write = 80000000;
+      // cfg.freq_write = 80000000;
       cfg.pin_wr = 18;
       cfg.pin_rd = 48;
       cfg.pin_rs = 45;
@@ -122,32 +122,16 @@ LGFX tft;
 static const uint16_t screenWidth = 480;
 static const uint16_t screenHeight = 320;
 
-lv_color_t buf_display[screenWidth * screenHeight / 8];
-lv_color_t buf_render[screenWidth * screenHeight / 8];
-bool buffer_swap = false;
-
-/* Display flushing */
-lv_disp_draw_buf_t draw_buf;
+static lv_disp_draw_buf_t draw_buf;
+static lv_color_t buf[2][screenWidth * 24];
 
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
-  if (buffer_swap)
-  {
-    lv_color_t *buf = buf_render; // Use the rendering buffer
-    memcpy(buf_render, buf_display, screenWidth * screenHeight / 8 * sizeof(lv_color_t));
-    memcpy(buf_display, buf, screenWidth * screenHeight / 8 * sizeof(lv_color_t));
-
-    buffer_swap = false;
+  if (tft.getStartCount() == 0)
+  { // Processing if not yet started
+    tft.startWrite();
   }
-
-  uint32_t w = (area->x2 - area->x1 + 1);
-  uint32_t h = (area->y2 - area->y1 + 1);
-
-  tft.startWrite();
-  tft.setAddrWindow(area->x1, area->y1, w, h);
-  tft.writePixels((lgfx::rgb565_t *)&color_p->full, w * h);
-  tft.endWrite();
-
+  tft.pushImageDMA(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1, (lgfx::swap565_t *)&color_p->full);
   lv_disp_flush_ready(disp);
 }
 
@@ -160,7 +144,7 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 
   if (touchX > screenWidth || touchY > screenHeight)
   {
-    Serial.println("Y or y outside of expected parameters..");
+    // Serial.println("Y or y outside of expected parameters..");
   }
   else
   {
@@ -181,20 +165,20 @@ void touch_init()
 
   if (error == 0)
   {
-    Serial.print("I2C device found at address 0x");
-    Serial.print(i2c_touch_addr, HEX);
-    Serial.println("  !");
+    // Serial.print("I2C device found at address 0x");
+    // Serial.print(i2c_touch_addr, HEX);
+    // Serial.println("  !");
   }
   else if (error == 4)
   {
-    Serial.print("Unknown error at address 0x");
-    Serial.println(i2c_touch_addr, HEX);
+    // Serial.print("Unknown error at address 0x");
+    // Serial.println(i2c_touch_addr, HEX);
   }
 }
 
-const int speedInterval = 60;
+const int speedInterval = 30;
 const int SPEED_INCREMENT = 1;
-const int MAX_SPEED = 35;
+const int MAX_SPEED = 1000;
 const int MIN_SPEED = 0;
 
 void updateSpeed()
@@ -216,7 +200,7 @@ void updateSpeed()
     }
   }
   lv_arc_set_value(ui_SpeedArc, speedValue);
-  lv_label_set_text_fmt(ui_SpeedLabel, "%d", speedValue);
+  // lv_label_set_text_fmt(ui_SpeedLabel, "%d", speedValue);
 }
 
 void lvgl_loop(void *parameter)
@@ -224,7 +208,6 @@ void lvgl_loop(void *parameter)
   while (true)
   {
 
-    updateSpeed();
     if (incrementingTemp)
     {
       tempValue += 1;
@@ -263,8 +246,6 @@ void lvgl_loop(void *parameter)
     lv_slider_set_value(ui_Slider2, sliderValue, LV_ANIM_OFF);
     lv_label_set_text_fmt(ui_batteryint, "%d", sliderValue);
     lv_timer_handler();
-
-    buffer_swap = true; // Set the flag to swap buffers
   }
   vTaskDelete(NULL);
 }
@@ -283,7 +264,7 @@ void guiHandler()
 
 void setup()
 {
-  Serial.begin(115200); /* prepare for possible serial debug */
+  // Serial.begin(115200); /* prepare for possible serial debug */
   // Buzzer
   // pinMode(BUZZER_PIN, OUTPUT);
   // ledcSetup(4, 5000, 8);
@@ -299,7 +280,7 @@ void setup()
   touch_init();
 
   lv_init();
-  lv_disp_draw_buf_init(&draw_buf, buf_display, NULL, screenWidth * screenHeight / 8);
+  lv_disp_draw_buf_init(&draw_buf, buf[0], buf[1], screenWidth * 10);
 
   /*Initialize the display*/
   static lv_disp_drv_t disp_drv;
@@ -324,15 +305,16 @@ void setup()
 
 void loop()
 {
-  // unsigned long currentMillis = millis();
+  unsigned long currentMillis = millis();
 
-  // // Calculate the time elapsed since the last update
-  // unsigned long timeElapsed = currentMillis - previousMillis;
+  // Calculate the time elapsed since the last update
+  unsigned long timeElapsed = currentMillis - previousMillis;
 
-  // // Update speed based on elapsed time
-  // while (timeElapsed >= speedInterval)
-  // {
-  //   timeElapsed -= speedInterval;
-  //   previousMillis += speedInterval;
-  // }
+  // Update speed based on elapsed time
+  while (timeElapsed >= speedInterval)
+  {
+    updateSpeed();
+    timeElapsed -= speedInterval;
+    previousMillis += speedInterval;
+  }
 }
