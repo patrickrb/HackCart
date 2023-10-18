@@ -22,25 +22,13 @@ const int i2c_touch_addr = TOUCH_I2C_ADD;
 
 unsigned long previousMillis = 0; // Will store the last time the slider value was updated
 const long interval = 100;        // interval at which to update the slider value (milliseconds)
-const long speedInterval = 5;
 
 int sliderValue = 1;
-float speedValue = 0;
+int speedValue = 0;
 int tempValue = 0;
 bool incrementingBattery = true;
 bool incrementingSpeed = true;
 bool incrementingTemp = true;
-
-enum AnimationState
-{
-  ANIMATE_TEMP,
-  ANIMATE_SPEED,
-  ANIMATE_BATTERY
-};
-
-AnimationState currentState = ANIMATE_TEMP;
-
-int sldval;
 
 class LGFX : public lgfx::LGFX_Device
 {
@@ -133,12 +121,25 @@ LGFX tft;
 /*Change to your screen resolution*/
 static const uint16_t screenWidth = 480;
 static const uint16_t screenHeight = 320;
-static lv_disp_draw_buf_t draw_buf;
-static lv_color_t buf[screenWidth * screenHeight / 8];
+
+lv_color_t buf_display[screenWidth * screenHeight / 8];
+lv_color_t buf_render[screenWidth * screenHeight / 8];
+bool buffer_swap = false;
 
 /* Display flushing */
+lv_disp_draw_buf_t draw_buf;
+
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
+  if (buffer_swap)
+  {
+    lv_color_t *buf = buf_render; // Use the rendering buffer
+    memcpy(buf_render, buf_display, screenWidth * screenHeight / 8 * sizeof(lv_color_t));
+    memcpy(buf_display, buf, screenWidth * screenHeight / 8 * sizeof(lv_color_t));
+
+    buffer_swap = false;
+  }
+
   uint32_t w = (area->x2 - area->x1 + 1);
   uint32_t h = (area->y2 - area->y1 + 1);
 
@@ -191,93 +192,92 @@ void touch_init()
   }
 }
 
+const int speedInterval = 60;
+const int SPEED_INCREMENT = 1;
+const int MAX_SPEED = 35;
+const int MIN_SPEED = 0;
+
+void updateSpeed()
+{
+  if (incrementingSpeed)
+  {
+    speedValue += SPEED_INCREMENT;
+    if (speedValue >= MAX_SPEED)
+    {
+      incrementingSpeed = false;
+    }
+  }
+  else
+  {
+    speedValue -= SPEED_INCREMENT;
+    if (speedValue <= MIN_SPEED)
+    {
+      incrementingSpeed = true;
+    }
+  }
+  lv_arc_set_value(ui_SpeedArc, speedValue);
+  lv_label_set_text_fmt(ui_SpeedLabel, "%d", speedValue);
+}
+
 void lvgl_loop(void *parameter)
 {
-
   while (true)
   {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= speedInterval)
+
+    updateSpeed();
+    if (incrementingTemp)
     {
-      if (incrementingSpeed)
+      tempValue += 1;
+      if (tempValue >= 105)
       {
-        speedValue += 0.1;
-        if (speedValue >= 35)
-        {
-          incrementingSpeed = false;
-        }
+        incrementingTemp = false;
       }
-      else
-      {
-        speedValue -= 0.1;
-        if (speedValue <= 0)
-        {
-          incrementingSpeed = true;
-        }
-      }
-      lv_arc_set_value(ui_SpeedArc, speedValue);
-      lv_label_set_text_fmt(ui_SpeedLabel, "%.1f", speedValue);
     }
-
-    if (currentMillis - previousMillis >= interval)
+    else
     {
-
-      if (incrementingTemp)
+      tempValue -= 1;
+      if (tempValue <= 0)
       {
-        tempValue += 1;
-        if (tempValue >= 105)
-        {
-          incrementingTemp = false;
-        }
+        incrementingTemp = true;
       }
-      else
-      {
-        tempValue -= 1;
-        if (tempValue <= 0)
-        {
-          incrementingTemp = true;
-        }
-      }
-      lv_slider_set_value(ui_TempSlider, tempValue, LV_ANIM_OFF);
-      lv_label_set_text_fmt(ui_TempLabel, "%d", tempValue);
-
-      if (incrementingBattery)
-      {
-        sliderValue++;
-        if (sliderValue >= 99)
-        {
-          incrementingBattery = false;
-        }
-      }
-      else
-      {
-        sliderValue--;
-        if (sliderValue <= 1)
-        {
-          incrementingBattery = true;
-        }
-      }
-      lv_slider_set_value(ui_Slider2, sliderValue, LV_ANIM_OFF);
-      lv_label_set_text_fmt(ui_batteryint, "%d", sliderValue);
     }
-    previousMillis = currentMillis;
+    lv_slider_set_value(ui_TempSlider, tempValue, LV_ANIM_OFF);
+    lv_label_set_text_fmt(ui_TempLabel, "%d", tempValue);
+
+    if (incrementingBattery)
+    {
+      sliderValue++;
+      if (sliderValue >= 99)
+      {
+        incrementingBattery = false;
+      }
+    }
+    else
+    {
+      sliderValue--;
+      if (sliderValue <= 1)
+      {
+        incrementingBattery = true;
+      }
+    }
+    lv_slider_set_value(ui_Slider2, sliderValue, LV_ANIM_OFF);
+    lv_label_set_text_fmt(ui_batteryint, "%d", sliderValue);
     lv_timer_handler();
+
+    buffer_swap = true; // Set the flag to swap buffers
   }
   vTaskDelete(NULL);
 }
 
 void guiHandler()
 {
-
   xTaskCreatePinnedToCore(
-      // xTaskCreate(
       lvgl_loop,   // Function that should be called
       "LVGL Loop", // Name of the task (for debugging)
       20480,       // Stack size (bytes)
       NULL,        // Parameter to pass
       1,           // Task priority
-      // NULL
-      NULL, // Task handle
+      NULL,        // Task handle
       1);
 }
 
@@ -299,7 +299,7 @@ void setup()
   touch_init();
 
   lv_init();
-  lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * screenHeight / 8);
+  lv_disp_draw_buf_init(&draw_buf, buf_display, NULL, screenWidth * screenHeight / 8);
 
   /*Initialize the display*/
   static lv_disp_drv_t disp_drv;
@@ -324,4 +324,15 @@ void setup()
 
 void loop()
 {
+  // unsigned long currentMillis = millis();
+
+  // // Calculate the time elapsed since the last update
+  // unsigned long timeElapsed = currentMillis - previousMillis;
+
+  // // Update speed based on elapsed time
+  // while (timeElapsed >= speedInterval)
+  // {
+  //   timeElapsed -= speedInterval;
+  //   previousMillis += speedInterval;
+  // }
 }

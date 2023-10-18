@@ -88,8 +88,8 @@ lv_obj_set_style_text_opa(ui_Label2, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Label2, &lv_font_montserrat_12, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_SpeedArc = lv_arc_create(ui_Screen1);
-lv_obj_set_width( ui_SpeedArc, 150);
-lv_obj_set_height( ui_SpeedArc, 150);
+lv_obj_set_width( ui_SpeedArc, 147);
+lv_obj_set_height( ui_SpeedArc, 149);
 lv_obj_set_x( ui_SpeedArc, 2 );
 lv_obj_set_y( ui_SpeedArc, 1 );
 lv_obj_set_align( ui_SpeedArc, LV_ALIGN_CENTER );
@@ -101,7 +101,7 @@ lv_obj_set_style_bg_opa(ui_SpeedArc, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_arc_color(ui_SpeedArc, lv_color_hex(0x4040FF), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_arc_opa(ui_SpeedArc, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-lv_obj_set_style_arc_width(ui_SpeedArc, 10, LV_PART_INDICATOR| LV_STATE_DEFAULT);
+lv_obj_set_style_arc_width(ui_SpeedArc, 5, LV_PART_INDICATOR| LV_STATE_DEFAULT);
 lv_obj_set_style_arc_img_src( ui_SpeedArc, &ui_img_speed_gauge_png, LV_PART_INDICATOR | LV_STATE_DEFAULT );
 
 lv_obj_set_style_bg_color(ui_SpeedArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT );
@@ -160,5 +160,7 @@ lv_label_set_text(ui_Label3,"MPH");
 lv_obj_set_style_text_color(ui_Label3, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_Label3, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Label3, &lv_font_montserrat_12, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_add_event_cb(ui_SpeedArc, ui_event_SpeedArc, LV_EVENT_ALL, NULL);
 
 }

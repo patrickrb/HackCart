@@ -19,6 +19,7 @@ lv_obj_t *ui_Slider2;
 lv_obj_t *ui_BatteryPercentage;
 lv_obj_t *ui_batteryint;
 lv_obj_t *ui_Label2;
+void ui_event_SpeedArc( lv_event_t * e);
 lv_obj_t *ui_SpeedArc;
 lv_obj_t *ui_Image4;
 lv_obj_t *ui_TempSlider;
@@ -39,6 +40,12 @@ const lv_img_dsc_t *ui_imgset_1613556616[1] = {&ui_img_1926738670};
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
+void ui_event_SpeedArc( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_VALUE_CHANGED) {
+      _ui_arc_set_text_value( ui_SpeedLabel, target, "", "");
+}
+}
 
 ///////////////////// SCREENS ////////////////////
 

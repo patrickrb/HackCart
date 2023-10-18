@@ -36,6 +36,7 @@ extern lv_obj_t *ui_Slider2;
 extern lv_obj_t *ui_BatteryPercentage;
 extern lv_obj_t *ui_batteryint;
 extern lv_obj_t *ui_Label2;
+void ui_event_SpeedArc( lv_event_t * e);
 extern lv_obj_t *ui_SpeedArc;
 extern lv_obj_t *ui_Image4;
 extern lv_obj_t *ui_TempSlider;
