@@ -1,12 +1,5 @@
-<a href='https://ko-fi.com/ozinfl' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
+![image](https://github.com/patrickrb/HackCart/assets/6586559/204140d1-ba00-4861-aa4f-72bc9f4d135a)
 
-# Elecrow 3.5" RGB TFT With SQARELINE Interface example.
-
-Quick "Getting Started" Example setup for the Elecrow 3.5" RGB TFT.
-
-I have done all the hard work, so you dont have to!!!
-
-You can delete the squareline components in the squareline folder and replace them with your own design. 
 
 SPECIFICATIONS:
 
